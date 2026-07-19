@@ -134,6 +134,8 @@ export default function Home() {
     return null;
   }
 
+  const totalNew = NOTIFY_TABS.reduce((sum, key) => sum + (newCounts[key] || 0), 0);
+
   return (
     <div className="flex min-h-screen flex-1 flex-col">
       <header className="flex items-center justify-between border-b border-white/10 px-6 py-5 sm:px-10">
@@ -151,9 +153,14 @@ export default function Home() {
           <button
             onClick={() => setMenuOpen((open) => !open)}
             aria-label="Menü"
-            className="text-white/80 transition-colors hover:text-white sm:hidden"
+            className="relative text-white/80 transition-colors hover:text-white sm:hidden"
           >
             {menuOpen ? <CloseIcon /> : <MenuIcon />}
+            {!menuOpen && totalNew > 0 && (
+              <span className="absolute -right-2 -top-2 inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-white px-1 text-[10px] font-medium leading-none text-black">
+                {totalNew}
+              </span>
+            )}
           </button>
         </div>
       </header>
