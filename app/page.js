@@ -10,6 +10,10 @@ import DatesSection from "@/components/DatesSection";
 import FinanceSection from "@/components/FinanceSection";
 import NotesSection from "@/components/NotesSection";
 import HomeSection from "@/components/HomeSection";
+import { getLastSeen, markSeen } from "@/lib/lastSeen";
+
+// Tabs, für die "neu seit letztem Besuch" gezählt wird (id = Tabellenname)
+const NOTIFY_TABS = ["dates", "notes"];
 
 const TABS = [
   { id: "start", label: "Start" },
@@ -55,12 +59,21 @@ function CloseIcon() {
   );
 }
 
+function NewBadge({ count }) {
+  return (
+    <span className="ml-2 inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-white px-1.5 text-xs font-medium text-black">
+      {count}
+    </span>
+  );
+}
+
 export default function Home() {
   const router = useRouter();
   // undefined = wird noch geladen, null = nicht eingeloggt, Objekt = eingeloggt
   const [session, setSession] = useState(undefined);
   const [activeTab, setActiveTab] = useState("start");
   const [menuOpen, setMenuOpen] = useState(false);
+  const [newCounts, setNewCounts] = useState({});
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
@@ -73,6 +86,37 @@ export default function Home() {
   useEffect(() => {
     if (session === null) router.replace("/login");
   }, [session, router]);
+
+  useEffect(() => {
+    if (!session) return;
+    async function checkNew() {
+      const counts = {};
+      for (const key of NOTIFY_TABS) {
+        let since = getLastSeen(key);
+        if (!since) {
+          // Erster Besuch auf diesem Gerät: nichts als "neu" markieren
+          markSeen(key);
+          since = new Date().toISOString();
+        }
+        const { count } = await supabase
+          .from(key)
+          .select("id", { count: "exact", head: true })
+          .gt("created_at", since);
+        counts[key] = count || 0;
+      }
+      setNewCounts(counts);
+    }
+    checkNew();
+  }, [session]);
+
+  function selectTab(id) {
+    setActiveTab(id);
+    setMenuOpen(false);
+    if (NOTIFY_TABS.includes(id)) {
+      markSeen(id);
+      setNewCounts((prev) => ({ ...prev, [id]: 0 }));
+    }
+  }
 
   async function handleLogout() {
     await supabase.auth.signOut();
@@ -118,7 +162,7 @@ export default function Home() {
         {TABS.map((tab) => (
           <button
             key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
+            onClick={() => selectTab(tab.id)}
             className={`px-4 py-3 text-sm transition-colors ${
               activeTab === tab.id
                 ? "border-b-2 border-white text-white"
@@ -126,6 +170,7 @@ export default function Home() {
             }`}
           >
             {tab.label}
+            {newCounts[tab.id] > 0 && <NewBadge count={newCounts[tab.id]} />}
           </button>
         ))}
       </nav>
@@ -135,15 +180,13 @@ export default function Home() {
           {TABS.map((tab) => (
             <button
               key={tab.id}
-              onClick={() => {
-                setActiveTab(tab.id);
-                setMenuOpen(false);
-              }}
-              className={`border-b border-white/10 px-6 py-3 text-left text-sm transition-colors ${
+              onClick={() => selectTab(tab.id)}
+              className={`flex items-center border-b border-white/10 px-6 py-3 text-left text-sm transition-colors ${
                 activeTab === tab.id ? "bg-white text-black" : "text-white/70 hover:text-white"
               }`}
             >
               {tab.label}
+              {newCounts[tab.id] > 0 && <NewBadge count={newCounts[tab.id]} />}
             </button>
           ))}
           <button
