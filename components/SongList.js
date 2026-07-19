@@ -3,13 +3,16 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { formatDuration, parseDuration } from "@/lib/format";
+import SongDetailModal from "@/components/SongDetailModal";
 
 export default function SongList({ table, heading }) {
   const [songs, setSongs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [title, setTitle] = useState("");
+  const [artist, setArtist] = useState("");
   const [length, setLength] = useState("");
   const [error, setError] = useState("");
+  const [selectedSong, setSelectedSong] = useState(null);
 
   useEffect(() => {
     loadSongs();
@@ -42,6 +45,7 @@ export default function SongList({ table, heading }) {
 
     const { error } = await supabase.from(table).insert({
       title: title.trim(),
+      artist: artist.trim() || null,
       length_seconds,
     });
     if (error) {
@@ -49,6 +53,7 @@ export default function SongList({ table, heading }) {
       return;
     }
     setTitle("");
+    setArtist("");
     setLength("");
     loadSongs();
   }
@@ -70,6 +75,14 @@ export default function SongList({ table, heading }) {
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
+            className="border border-white/20 bg-transparent px-3 py-2 outline-none focus:border-white"
+          />
+        </div>
+        <div className="flex flex-1 flex-col gap-1">
+          <label className="text-sm text-white/60">Interpret (optional)</label>
+          <input
+            value={artist}
+            onChange={(e) => setArtist(e.target.value)}
             className="border border-white/20 bg-transparent px-3 py-2 outline-none focus:border-white"
           />
         </div>
@@ -100,7 +113,13 @@ export default function SongList({ table, heading }) {
         <ul className="divide-y divide-white/10 border-t border-white/10">
           {songs.map((song) => (
             <li key={song.id} className="flex items-center justify-between py-3">
-              <span>{song.title}</span>
+              <button
+                onClick={() => setSelectedSong(song)}
+                className="text-left transition-colors hover:text-white/70"
+              >
+                {song.title}
+                {song.artist && <span className="ml-2 text-white/40">{song.artist}</span>}
+              </button>
               <div className="flex items-center gap-4">
                 <span className="text-white/60">{formatDuration(song.length_seconds)}</span>
                 <button
@@ -113,6 +132,15 @@ export default function SongList({ table, heading }) {
             </li>
           ))}
         </ul>
+      )}
+
+      {selectedSong && (
+        <SongDetailModal
+          song={selectedSong}
+          table={table}
+          onClose={() => setSelectedSong(null)}
+          onSaved={loadSongs}
+        />
       )}
     </section>
   );
