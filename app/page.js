@@ -8,6 +8,7 @@ import SongList from "@/components/SongList";
 import SetlistBuilder from "@/components/SetlistBuilder";
 import DatesSection from "@/components/DatesSection";
 import FinanceSection from "@/components/FinanceSection";
+import NotesSection from "@/components/NotesSection";
 
 const TABS = [
   { id: "covers", label: "Coversongs" },
@@ -15,6 +16,7 @@ const TABS = [
   { id: "setlists", label: "Setlists" },
   { id: "dates", label: "Termine" },
   { id: "finance", label: "Finanzen" },
+  { id: "notes", label: "Notizen" },
 ];
 
 export default function Home() {
@@ -88,6 +90,7 @@ export default function Home() {
         {activeTab === "setlists" && <SetlistBuilder />}
         {activeTab === "dates" && <DatesSection />}
         {activeTab === "finance" && <FinanceSection />}
+        {activeTab === "notes" && <NotesSection />}
       </main>
     </div>
   );
