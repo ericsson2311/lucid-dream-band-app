@@ -81,6 +81,37 @@ export default function SetlistBuilder() {
 
   if (loading) return <p className="text-white/60">Lade…</p>;
 
+  const covers = pool.filter((s) => s.source === "covers");
+  const originals = pool.filter((s) => s.source === "originals");
+
+  function renderPoolGroup(heading, songs) {
+    return (
+      <div className="mb-6">
+        <p className="mb-2 text-sm text-white/50">{heading}</p>
+        {songs.length === 0 ? (
+          <p className="text-sm text-white/40">Keine Songs vorhanden.</p>
+        ) : (
+          <ul className="divide-y divide-white/10 border-t border-white/10">
+            {songs.map((song) => (
+              <li
+                key={`${song.source}-${song.id}`}
+                className="flex items-center justify-between py-2"
+              >
+                <span className="text-sm">{song.title}</span>
+                <button
+                  onClick={() => addToSelected(song)}
+                  className="text-sm text-white/60 transition-colors hover:text-white"
+                >
+                  + Hinzufügen
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    );
+  }
+
   return (
     <section className="mx-auto max-w-4xl">
       <h2 className="mb-6 font-serif text-3xl">Setlist-Ersteller</h2>
@@ -91,31 +122,8 @@ export default function SetlistBuilder() {
           <h3 className="mb-3 text-sm uppercase tracking-wide text-white/60">
             Songs auswählen
           </h3>
-          {pool.length === 0 ? (
-            <p className="text-white/60">Noch keine Songs vorhanden.</p>
-          ) : (
-            <ul className="divide-y divide-white/10 border-t border-white/10">
-              {pool.map((song) => (
-                <li
-                  key={`${song.source}-${song.id}`}
-                  className="flex items-center justify-between py-2"
-                >
-                  <span className="text-sm">
-                    {song.title}{" "}
-                    <span className="text-white/40">
-                      ({song.source === "covers" ? "Cover" : "Eigen"})
-                    </span>
-                  </span>
-                  <button
-                    onClick={() => addToSelected(song)}
-                    className="text-sm text-white/60 transition-colors hover:text-white"
-                  >
-                    + Hinzufügen
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
+          {renderPoolGroup("Coversongs", covers)}
+          {renderPoolGroup("Eigene Songs", originals)}
         </div>
 
         <div>

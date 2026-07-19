@@ -13,8 +13,7 @@ import HomeSection from "@/components/HomeSection";
 
 const TABS = [
   { id: "start", label: "Start" },
-  { id: "covers", label: "Coversongs" },
-  { id: "originals", label: "Eigene Songs" },
+  { id: "songs", label: "Songs" },
   { id: "setlists", label: "Setlists" },
   { id: "dates", label: "Termine" },
   { id: "finance", label: "Finanzen" },
@@ -158,8 +157,12 @@ export default function Home() {
 
       <main className="flex-1 px-6 py-10 sm:px-10">
         {activeTab === "start" && <HomeSection />}
-        {activeTab === "covers" && <SongList table="covers" heading="Coversongs" />}
-        {activeTab === "originals" && <SongList table="originals" heading="Eigene Songs" />}
+        {activeTab === "songs" && (
+          <div className="flex flex-col gap-16">
+            <SongList table="covers" heading="Coversongs" />
+            <SongList table="originals" heading="Eigene Songs" />
+          </div>
+        )}
         {activeTab === "setlists" && <SetlistBuilder />}
         {activeTab === "dates" && <DatesSection />}
         {activeTab === "finance" && <FinanceSection />}
