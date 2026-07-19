@@ -34,7 +34,7 @@ export default function SongList({ table, heading, refreshSignal }) {
   }
 
   return (
-    <section className="mx-auto max-w-2xl">
+    <section>
       <h2 className="mb-6 font-serif text-3xl">{heading}</h2>
 
       {error && <p className="mb-4 text-sm text-red-400">{error}</p>}
@@ -46,15 +46,15 @@ export default function SongList({ table, heading, refreshSignal }) {
       ) : (
         <ul className="divide-y divide-white/10 border-t border-white/10">
           {songs.map((song) => (
-            <li key={song.id} className="flex items-center justify-between py-3">
+            <li key={song.id} className="flex items-center justify-between gap-4 py-3">
               <button
                 onClick={() => setSelectedSong(song)}
-                className="text-left transition-colors hover:text-white/70"
+                className="min-w-0 flex-1 truncate text-left transition-colors hover:text-white/70"
               >
                 {song.title}
                 {song.artist && <span className="ml-2 text-white/40">{song.artist}</span>}
               </button>
-              <div className="flex items-center gap-4">
+              <div className="flex shrink-0 items-center gap-4">
                 <span className="text-white/60">{formatDuration(song.length_seconds)}</span>
                 <button
                   onClick={() => handleDelete(song.id)}

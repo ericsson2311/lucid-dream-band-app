@@ -45,8 +45,8 @@ export default function SongsSection() {
   }
 
   return (
-    <div className="flex flex-col gap-16">
-      <section className="mx-auto max-w-2xl">
+    <div className="mx-auto flex max-w-2xl flex-col gap-16">
+      <section>
         <h2 className="mb-6 font-serif text-3xl">Song hinzufügen</h2>
 
         <form onSubmit={handleAdd} className="flex flex-col gap-3">
