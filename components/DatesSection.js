@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { formatDate } from "@/lib/format";
+import { formatDate, todayIso } from "@/lib/format";
 
 function pad(n) {
   return String(n).padStart(2, "0");
@@ -179,35 +179,70 @@ export default function DatesSection() {
       ) : dates.length === 0 ? (
         <p className="text-white/60">Noch keine Termine.</p>
       ) : (
-        <ul className="divide-y divide-white/10 border-t border-white/10">
-          {dates.map((d) => (
-            <li key={d.id} className="flex items-center justify-between py-3">
-              <div>
-                <p>{d.title}</p>
-                <p className="text-sm text-white/50">
-                  {formatDate(d.event_date)}
-                  {d.event_time ? `, ${d.event_time} Uhr` : ""}
-                  {d.location ? ` — ${d.location}` : ""}
-                </p>
-              </div>
-              <div className="flex items-center gap-4">
-                <button
-                  onClick={() => downloadIcs(d)}
-                  className="text-sm text-white/60 transition-colors hover:text-white"
-                >
-                  .ics
-                </button>
-                <button
-                  onClick={() => handleDelete(d.id)}
-                  className="text-sm text-white/40 transition-colors hover:text-red-400"
-                >
-                  Löschen
-                </button>
-              </div>
-            </li>
-          ))}
-        </ul>
+        (() => {
+          const today = todayIso();
+          const upcoming = dates
+            .filter((d) => d.event_date >= today)
+            .sort((a, b) => a.event_date.localeCompare(b.event_date));
+          const past = dates
+            .filter((d) => d.event_date < today)
+            .sort((a, b) => b.event_date.localeCompare(a.event_date));
+
+          return (
+            <>
+              {upcoming.length > 0 ? (
+                <ul className="divide-y divide-white/10 border-t border-white/10">
+                  {upcoming.map((d) => renderDateRow(d))}
+                </ul>
+              ) : (
+                <p className="text-white/60">Keine anstehenden Termine.</p>
+              )}
+              {past.length > 0 && (
+                <>
+                  <h3 className="mb-1 mt-8 text-sm uppercase tracking-wide text-white/40">
+                    Vergangen
+                  </h3>
+                  <ul className="divide-y divide-white/10 border-t border-white/10">
+                    {past.map((d) => renderDateRow(d, true))}
+                  </ul>
+                </>
+              )}
+            </>
+          );
+        })()
       )}
     </section>
   );
+
+  function renderDateRow(d, faded = false) {
+    return (
+      <li
+        key={d.id}
+        className={`flex items-center justify-between py-3 ${faded ? "opacity-40" : ""}`}
+      >
+        <div>
+          <p>{d.title}</p>
+          <p className="text-sm text-white/50">
+            {formatDate(d.event_date)}
+            {d.event_time ? `, ${d.event_time} Uhr` : ""}
+            {d.location ? ` — ${d.location}` : ""}
+          </p>
+        </div>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => downloadIcs(d)}
+            className="text-sm text-white/60 transition-colors hover:text-white"
+          >
+            .ics
+          </button>
+          <button
+            onClick={() => handleDelete(d.id)}
+            className="text-sm text-white/40 transition-colors hover:text-red-400"
+          >
+            Löschen
+          </button>
+        </div>
+      </li>
+    );
+  }
 }
