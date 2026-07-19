@@ -21,11 +21,47 @@ const TABS = [
   { id: "notes", label: "Notizen" },
 ];
 
+function MenuIcon() {
+  return (
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+    >
+      <line x1="3" y1="6" x2="21" y2="6" />
+      <line x1="3" y1="12" x2="21" y2="12" />
+      <line x1="3" y1="18" x2="21" y2="18" />
+    </svg>
+  );
+}
+
+function CloseIcon() {
+  return (
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+    >
+      <line x1="6" y1="6" x2="18" y2="18" />
+      <line x1="18" y1="6" x2="6" y2="18" />
+    </svg>
+  );
+}
+
 export default function Home() {
   const router = useRouter();
   // undefined = wird noch geladen, null = nicht eingeloggt, Objekt = eingeloggt
   const [session, setSession] = useState(undefined);
   const [activeTab, setActiveTab] = useState("start");
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
@@ -62,15 +98,24 @@ export default function Home() {
           <Image src="/logo.png" alt="Lucid Dream Logo" width={32} height={32} />
           <h1 className="font-serif text-2xl tracking-tight sm:text-3xl">Bandverwaltung</h1>
         </div>
-        <button
-          onClick={handleLogout}
-          className="text-sm text-white/60 transition-colors hover:text-white"
-        >
-          Abmelden
-        </button>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={handleLogout}
+            className="hidden text-sm text-white/60 transition-colors hover:text-white sm:block"
+          >
+            Abmelden
+          </button>
+          <button
+            onClick={() => setMenuOpen((open) => !open)}
+            aria-label="Menü"
+            className="text-white/80 transition-colors hover:text-white sm:hidden"
+          >
+            {menuOpen ? <CloseIcon /> : <MenuIcon />}
+          </button>
+        </div>
       </header>
 
-      <nav className="flex flex-wrap gap-1 border-b border-white/10 px-6 sm:px-10">
+      <nav className="hidden border-b border-white/10 px-6 sm:flex sm:flex-wrap sm:gap-1 sm:px-10">
         {TABS.map((tab) => (
           <button
             key={tab.id}
@@ -85,6 +130,31 @@ export default function Home() {
           </button>
         ))}
       </nav>
+
+      {menuOpen && (
+        <nav className="flex flex-col border-b border-white/10 sm:hidden">
+          {TABS.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => {
+                setActiveTab(tab.id);
+                setMenuOpen(false);
+              }}
+              className={`border-b border-white/10 px-6 py-3 text-left text-sm transition-colors ${
+                activeTab === tab.id ? "bg-white text-black" : "text-white/70 hover:text-white"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+          <button
+            onClick={handleLogout}
+            className="px-6 py-3 text-left text-sm text-white/60 transition-colors hover:text-white"
+          >
+            Abmelden
+          </button>
+        </nav>
+      )}
 
       <main className="flex-1 px-6 py-10 sm:px-10">
         {activeTab === "start" && <HomeSection />}
