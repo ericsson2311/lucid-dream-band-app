@@ -9,8 +9,10 @@ import SetlistBuilder from "@/components/SetlistBuilder";
 import DatesSection from "@/components/DatesSection";
 import FinanceSection from "@/components/FinanceSection";
 import NotesSection from "@/components/NotesSection";
+import HomeSection from "@/components/HomeSection";
 
 const TABS = [
+  { id: "start", label: "Start" },
   { id: "covers", label: "Coversongs" },
   { id: "originals", label: "Eigene Songs" },
   { id: "setlists", label: "Setlists" },
@@ -23,7 +25,7 @@ export default function Home() {
   const router = useRouter();
   // undefined = wird noch geladen, null = nicht eingeloggt, Objekt = eingeloggt
   const [session, setSession] = useState(undefined);
-  const [activeTab, setActiveTab] = useState("covers");
+  const [activeTab, setActiveTab] = useState("start");
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
@@ -85,6 +87,7 @@ export default function Home() {
       </nav>
 
       <main className="flex-1 px-6 py-10 sm:px-10">
+        {activeTab === "start" && <HomeSection />}
         {activeTab === "covers" && <SongList table="covers" heading="Coversongs" />}
         {activeTab === "originals" && <SongList table="originals" heading="Eigene Songs" />}
         {activeTab === "setlists" && <SetlistBuilder />}
