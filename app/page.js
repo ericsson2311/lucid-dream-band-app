@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { supabase } from "@/lib/supabase";
-import SongList from "@/components/SongList";
+import SongsSection from "@/components/SongsSection";
 import SetlistBuilder from "@/components/SetlistBuilder";
 import DatesSection from "@/components/DatesSection";
 import FinanceSection from "@/components/FinanceSection";
@@ -157,12 +157,7 @@ export default function Home() {
 
       <main className="flex-1 px-6 py-10 sm:px-10">
         {activeTab === "start" && <HomeSection />}
-        {activeTab === "songs" && (
-          <div className="flex flex-col gap-16">
-            <SongList table="covers" heading="Coversongs" />
-            <SongList table="originals" heading="Eigene Songs" />
-          </div>
-        )}
+        {activeTab === "songs" && <SongsSection />}
         {activeTab === "setlists" && <SetlistBuilder />}
         {activeTab === "dates" && <DatesSection />}
         {activeTab === "finance" && <FinanceSection />}

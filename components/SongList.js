@@ -2,21 +2,18 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { formatDuration, parseDuration } from "@/lib/format";
+import { formatDuration } from "@/lib/format";
 import SongDetailModal from "@/components/SongDetailModal";
 
-export default function SongList({ table, heading }) {
+export default function SongList({ table, heading, refreshSignal }) {
   const [songs, setSongs] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [title, setTitle] = useState("");
-  const [artist, setArtist] = useState("");
-  const [length, setLength] = useState("");
   const [error, setError] = useState("");
   const [selectedSong, setSelectedSong] = useState(null);
 
   useEffect(() => {
     loadSongs();
-  }, [table]);
+  }, [table, refreshSignal]);
 
   async function loadSongs() {
     setLoading(true);
@@ -29,35 +26,6 @@ export default function SongList({ table, heading }) {
     setLoading(false);
   }
 
-  async function handleAdd(e) {
-    e.preventDefault();
-    setError("");
-    if (!title.trim()) return;
-
-    let length_seconds = null;
-    if (length.trim()) {
-      length_seconds = parseDuration(length.trim());
-      if (length_seconds === null) {
-        setError("Länge bitte im Format mm:ss angeben, z.B. 3:45");
-        return;
-      }
-    }
-
-    const { error } = await supabase.from(table).insert({
-      title: title.trim(),
-      artist: artist.trim() || null,
-      length_seconds,
-    });
-    if (error) {
-      setError(error.message);
-      return;
-    }
-    setTitle("");
-    setArtist("");
-    setLength("");
-    loadSongs();
-  }
-
   async function handleDelete(id) {
     if (!window.confirm("Diesen Song wirklich löschen?")) return;
     const { error } = await supabase.from(table).delete().eq("id", id);
@@ -68,40 +36,6 @@ export default function SongList({ table, heading }) {
   return (
     <section className="mx-auto max-w-2xl">
       <h2 className="mb-6 font-serif text-3xl">{heading}</h2>
-
-      <form onSubmit={handleAdd} className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end">
-        <div className="flex flex-1 flex-col gap-1">
-          <label className="text-sm text-white/60">Titel</label>
-          <input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className="border border-white/20 bg-transparent px-3 py-2 outline-none focus:border-white"
-          />
-        </div>
-        <div className="flex flex-1 flex-col gap-1">
-          <label className="text-sm text-white/60">Interpret (optional)</label>
-          <input
-            value={artist}
-            onChange={(e) => setArtist(e.target.value)}
-            className="border border-white/20 bg-transparent px-3 py-2 outline-none focus:border-white"
-          />
-        </div>
-        <div className="flex flex-col gap-1 sm:w-32">
-          <label className="text-sm text-white/60">Länge (mm:ss)</label>
-          <input
-            value={length}
-            onChange={(e) => setLength(e.target.value)}
-            placeholder="3:45"
-            className="border border-white/20 bg-transparent px-3 py-2 outline-none focus:border-white"
-          />
-        </div>
-        <button
-          type="submit"
-          className="border border-white px-4 py-2 transition-colors hover:bg-white hover:text-black"
-        >
-          Hinzufügen
-        </button>
-      </form>
 
       {error && <p className="mb-4 text-sm text-red-400">{error}</p>}
 
