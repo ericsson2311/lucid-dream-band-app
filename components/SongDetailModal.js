@@ -2,12 +2,16 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { formatDuration, parseDuration } from "@/lib/format";
 
 function stripFilePrefix(name) {
   return name.replace(/^\d+-/, "");
 }
 
 export default function SongDetailModal({ song, table, onClose, onSaved }) {
+  const [length, setLength] = useState(
+    song.length_seconds != null ? formatDuration(song.length_seconds) : ""
+  );
   const [bpm, setBpm] = useState(song.bpm ?? "");
   const [songKey, setSongKey] = useState(song.song_key ?? "");
   const [notes, setNotes] = useState(song.notes ?? "");
@@ -36,11 +40,22 @@ export default function SongDetailModal({ song, table, onClose, onSaved }) {
   async function handleSaveDetails(e) {
     e.preventDefault();
     setError("");
+
+    let length_seconds = null;
+    if (length.trim()) {
+      length_seconds = parseDuration(length.trim());
+      if (length_seconds === null) {
+        setError("Länge bitte im Format mm:ss angeben, z.B. 3:45");
+        return;
+      }
+    }
+
     setSaving(true);
     setSaved(false);
     const { error } = await supabase
       .from(table)
       .update({
+        length_seconds,
         bpm: bpm === "" ? null : Number(bpm),
         song_key: songKey.trim() || null,
         notes: notes.trim() || null,
@@ -111,6 +126,19 @@ export default function SongDetailModal({ song, table, onClose, onSaved }) {
         {error && <p className="mb-4 text-sm text-red-400">{error}</p>}
 
         <form onSubmit={handleSaveDetails} className="mb-10 flex flex-col gap-4">
+          <div className="flex flex-col gap-1">
+            <label className="text-sm text-white/60">Länge (mm:ss)</label>
+            <input
+              value={length}
+              onChange={(e) => {
+                setLength(e.target.value);
+                setSaved(false);
+              }}
+              placeholder="3:45"
+              className="w-32 border border-white/20 bg-transparent px-3 py-2 outline-none focus:border-white"
+            />
+          </div>
+
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1">
               <label className="text-sm text-white/60">BPM</label>
