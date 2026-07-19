@@ -46,10 +46,10 @@ export default function SongList({ table, heading, refreshSignal }) {
       ) : (
         <ul className="divide-y divide-white/10 border-t border-white/10">
           {songs.map((song) => (
-            <li key={song.id} className="flex items-center justify-between gap-4 py-3">
+            <li key={song.id} className="flex items-start justify-between gap-4 py-3">
               <button
                 onClick={() => setSelectedSong(song)}
-                className="min-w-0 flex-1 truncate text-left transition-colors hover:text-white/70"
+                className="min-w-0 flex-1 break-words text-left transition-colors hover:text-white/70"
               >
                 {song.title}
                 {song.artist && <span className="ml-2 text-white/40">{song.artist}</span>}
