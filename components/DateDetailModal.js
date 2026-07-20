@@ -25,6 +25,9 @@ export default function DateDetailModal({ dateEntry, onClose, onSaved }) {
 
   const folder = dateEntry.id;
 
+  // Für die Kartensuche die genaue Adresse bevorzugen, sonst den Ort
+  const mapQuery = address.trim() || location.trim();
+
   useEffect(() => {
     loadFiles();
   }, []);
@@ -191,6 +194,16 @@ export default function DateDetailModal({ dateEntry, onClose, onSaved }) {
               placeholder="Straße, PLZ, Stadt"
               className="border border-white/20 bg-transparent px-3 py-2 outline-none focus:border-white"
             />
+            {mapQuery && (
+              <a
+                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQuery)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-1 self-start text-sm text-white/60 underline transition-colors hover:text-white"
+              >
+                In Karten öffnen
+              </a>
+            )}
           </div>
 
           <div className="flex flex-col gap-1">
