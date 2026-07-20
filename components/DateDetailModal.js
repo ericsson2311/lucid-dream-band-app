@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { sanitizeFileName } from "@/lib/sanitizeFileName";
 
 function stripFilePrefix(name) {
   return name.replace(/^\d+-/, "");
@@ -75,7 +76,7 @@ export default function DateDetailModal({ dateEntry, onClose, onSaved }) {
     if (!file) return;
     setError("");
     setUploading(true);
-    const path = `${folder}/${Date.now()}-${file.name}`;
+    const path = `${folder}/${Date.now()}-${sanitizeFileName(file.name)}`;
     const { error } = await supabase.storage.from("date-files").upload(path, file);
     setUploading(false);
     if (error) {
@@ -113,7 +114,9 @@ export default function DateDetailModal({ dateEntry, onClose, onSaved }) {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-8 flex items-start justify-between gap-4">
-          <h2 className="font-serif text-4xl leading-tight">{title || "Ohne Titel"}</h2>
+          <h2 className="min-w-0 break-words font-serif text-3xl leading-tight sm:text-4xl">
+            {title || "Ohne Titel"}
+          </h2>
           <button
             onClick={onClose}
             className="shrink-0 text-sm text-white/60 transition-colors hover:text-white"
