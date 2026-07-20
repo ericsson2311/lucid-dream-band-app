@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { formatDate, todayIso } from "@/lib/format";
+import DateDetailModal from "@/components/DateDetailModal";
 
 function pad(n) {
   return String(n).padStart(2, "0");
@@ -17,7 +18,7 @@ function escapeIcs(text) {
 }
 
 function downloadIcs(dateEntry) {
-  const { id, title, event_date, event_time, location } = dateEntry;
+  const { id, title, event_date, event_time, location, address, notes } = dateEntry;
   const [year, month, day] = event_date.split("-").map(Number);
   const allDay = !event_time;
   const now = new Date();
@@ -44,6 +45,9 @@ function downloadIcs(dateEntry) {
     dtEndLine = `DTEND:${end}`;
   }
 
+  // Ort und Adresse landen gemeinsam im Kalender, damit die Navigation funktioniert
+  const fullLocation = [location, address].filter(Boolean).join(", ");
+
   const lines = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
@@ -54,7 +58,8 @@ function downloadIcs(dateEntry) {
     dtStartLine,
     dtEndLine,
     `SUMMARY:${escapeIcs(title)}`,
-    ...(location ? [`LOCATION:${escapeIcs(location)}`] : []),
+    ...(fullLocation ? [`LOCATION:${escapeIcs(fullLocation)}`] : []),
+    ...(notes ? [`DESCRIPTION:${escapeIcs(notes)}`] : []),
     "END:VEVENT",
     "END:VCALENDAR",
   ];
@@ -76,6 +81,7 @@ export default function DatesSection() {
   const [eventDate, setEventDate] = useState("");
   const [eventTime, setEventTime] = useState("");
   const [location, setLocation] = useState("");
+  const [selectedDate, setSelectedDate] = useState(null);
 
   useEffect(() => {
     loadDates();
@@ -211,6 +217,14 @@ export default function DatesSection() {
           );
         })()
       )}
+
+      {selectedDate && (
+        <DateDetailModal
+          dateEntry={selectedDate}
+          onClose={() => setSelectedDate(null)}
+          onSaved={loadDates}
+        />
+      )}
     </section>
   );
 
@@ -218,17 +232,20 @@ export default function DatesSection() {
     return (
       <li
         key={d.id}
-        className={`flex items-center justify-between py-3 ${faded ? "opacity-40" : ""}`}
+        className={`flex items-start justify-between gap-4 py-3 ${faded ? "opacity-40" : ""}`}
       >
-        <div>
-          <p>{d.title}</p>
-          <p className="text-sm text-white/50">
+        <button
+          onClick={() => setSelectedDate(d)}
+          className="min-w-0 flex-1 break-words text-left transition-colors hover:text-white/70"
+        >
+          <span className="block">{d.title}</span>
+          <span className="block text-sm text-white/50">
             {formatDate(d.event_date)}
             {d.event_time ? `, ${d.event_time} Uhr` : ""}
             {d.location ? ` — ${d.location}` : ""}
-          </p>
-        </div>
-        <div className="flex items-center gap-4">
+          </span>
+        </button>
+        <div className="flex shrink-0 items-center gap-4">
           <button
             onClick={() => downloadIcs(d)}
             className="text-sm text-white/60 transition-colors hover:text-white"
