@@ -10,7 +10,9 @@ import DatesSection from "@/components/DatesSection";
 import FinanceSection from "@/components/FinanceSection";
 import NotesSection from "@/components/NotesSection";
 import HomeSection from "@/components/HomeSection";
+import ProfileModal from "@/components/ProfileModal";
 import { getLastSeen, markSeen } from "@/lib/lastSeen";
+import { ensureProfile } from "@/lib/profile";
 
 // Tabs, für die "neu seit letztem Besuch" gezählt wird (id = Tabellenname)
 const NOTIFY_TABS = ["dates", "notes"];
@@ -74,6 +76,8 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState("start");
   const [menuOpen, setMenuOpen] = useState(false);
   const [newCounts, setNewCounts] = useState({});
+  const [profile, setProfile] = useState(null);
+  const [profileOpen, setProfileOpen] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
@@ -86,6 +90,13 @@ export default function Home() {
   useEffect(() => {
     if (session === null) router.replace("/login");
   }, [session, router]);
+
+  useEffect(() => {
+    if (!session?.user) return;
+    ensureProfile(session.user)
+      .then(setProfile)
+      .catch(() => {});
+  }, [session]);
 
   useEffect(() => {
     if (!session) return;
@@ -145,6 +156,12 @@ export default function Home() {
         </div>
         <div className="flex items-center gap-4">
           <button
+            onClick={() => setProfileOpen(true)}
+            className="hidden text-sm text-white/60 transition-colors hover:text-white sm:block"
+          >
+            {profile?.name ?? "Profil"}
+          </button>
+          <button
             onClick={handleLogout}
             className="hidden text-sm text-white/60 transition-colors hover:text-white sm:block"
           >
@@ -197,6 +214,15 @@ export default function Home() {
             </button>
           ))}
           <button
+            onClick={() => {
+              setProfileOpen(true);
+              setMenuOpen(false);
+            }}
+            className="border-b border-white/10 px-6 py-3 text-left text-sm text-white/70 transition-colors hover:text-white"
+          >
+            {profile?.name ? `Profil (${profile.name})` : "Profil"}
+          </button>
+          <button
             onClick={handleLogout}
             className="px-6 py-3 text-left text-sm text-white/60 transition-colors hover:text-white"
           >
@@ -213,6 +239,14 @@ export default function Home() {
         {activeTab === "finance" && <FinanceSection />}
         {activeTab === "notes" && <NotesSection />}
       </main>
+
+      {profileOpen && profile && (
+        <ProfileModal
+          profile={profile}
+          onClose={() => setProfileOpen(false)}
+          onSaved={setProfile}
+        />
+      )}
     </div>
   );
 }

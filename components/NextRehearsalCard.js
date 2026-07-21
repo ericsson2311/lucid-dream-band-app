@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { formatDate } from "@/lib/format";
+import RehearsalAttendance from "@/components/RehearsalAttendance";
 
 const REHEARSAL_ID = "00000000-0000-0000-0000-000000000001";
 
@@ -189,6 +190,7 @@ export default function NextRehearsalCard() {
           ) : (
             <p className="mt-3 text-sm text-white/40">Noch keine Songs ausgewählt.</p>
           )}
+          <RehearsalAttendance rehearsalDate={rehearsal.rehearsal_date} />
         </>
       ) : (
         <p className="text-white/60">Noch keine Probe geplant.</p>
