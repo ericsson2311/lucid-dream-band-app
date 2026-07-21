@@ -1,0 +1,14 @@
+project_id = "hcwvkxdxxiigrxrpvzjo"
+
+# Diese Functions werden nicht per Nutzer-Login aufgerufen (sondern von
+# Database Webhooks und einem Cron-Job), daher keine Supabase-JWT-Prüfung.
+# Der Schutz läuft stattdessen über den x-webhook-secret-Header (siehe
+# supabase/functions/_shared/push.ts und PUSH_SETUP.md).
+[functions.notify-new-date]
+verify_jwt = false
+
+[functions.notify-new-note]
+verify_jwt = false
+
+[functions.rehearsal-reminder]
+verify_jwt = false
