@@ -18,8 +18,7 @@ const GROUPS = [
 // Zu-/Absagen für die aktuell geplante Probe. Die Antworten sind an das
 // Probendatum gekoppelt: Wird eine neue Probe geplant (anderes Datum), beginnt
 // automatisch ein frischer Stand.
-export default function RehearsalAttendance({ rehearsalDate }) {
-  const [userId, setUserId] = useState(null);
+export default function RehearsalAttendance({ rehearsalDate, userId }) {
   const [rows, setRows] = useState([]);
   const [names, setNames] = useState({});
   const [loading, setLoading] = useState(true);
@@ -33,8 +32,6 @@ export default function RehearsalAttendance({ rehearsalDate }) {
 
   async function load() {
     setLoading(true);
-    const { data: userData } = await supabase.auth.getUser();
-    setUserId(userData.user?.id ?? null);
     const [attRes, profRes] = await Promise.all([
       supabase.from("rehearsal_attendance").select("*").eq("rehearsal_date", rehearsalDate),
       supabase.from("profiles").select("id, name"),

@@ -232,7 +232,7 @@ export default function Home() {
       )}
 
       <main className="flex-1 px-6 py-10 sm:px-10">
-        {activeTab === "start" && <HomeSection />}
+        {activeTab === "start" && <HomeSection userId={session.user.id} />}
         {activeTab === "songs" && <SongsSection />}
         {activeTab === "setlists" && <SetlistBuilder />}
         {activeTab === "dates" && <DatesSection />}

@@ -7,7 +7,7 @@ import RehearsalAttendance from "@/components/RehearsalAttendance";
 
 const REHEARSAL_ID = "00000000-0000-0000-0000-000000000001";
 
-export default function NextRehearsalCard() {
+export default function NextRehearsalCard({ userId }) {
   const [rehearsal, setRehearsal] = useState(null);
   const [pool, setPool] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -190,7 +190,7 @@ export default function NextRehearsalCard() {
           ) : (
             <p className="mt-3 text-sm text-white/40">Noch keine Songs ausgewählt.</p>
           )}
-          <RehearsalAttendance rehearsalDate={rehearsal.rehearsal_date} />
+          <RehearsalAttendance rehearsalDate={rehearsal.rehearsal_date} userId={userId} />
         </>
       ) : (
         <p className="text-white/60">Noch keine Probe geplant.</p>

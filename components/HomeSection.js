@@ -15,7 +15,7 @@ function formatFullDate(date) {
   }).format(date);
 }
 
-export default function HomeSection() {
+export default function HomeSection({ userId }) {
   const [nextDate, setNextDate] = useState(undefined);
   const [error, setError] = useState("");
 
@@ -48,7 +48,7 @@ export default function HomeSection() {
       {error && <p className="mb-4 text-sm text-red-400">{error}</p>}
 
       <div className="flex flex-col gap-6">
-        <NextRehearsalCard />
+        <NextRehearsalCard userId={userId} />
 
         <div className="border border-white/20 px-6 py-5">
           <h3 className="mb-3 font-serif text-2xl">Nächster Termin</h3>
