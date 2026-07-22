@@ -1,3 +1,11 @@
+// Chrome auf Android erkennt eine Seite nur dann als installierbare PWA
+// (mit eigenem Eintrag in den System-Einstellungen), wenn der Service
+// Worker einen fetch-Handler registriert — ohne den bleibt "Zum
+// Startbildschirm hinzufügen" nur eine einfache Verknüpfung.
+self.addEventListener("fetch", (event) => {
+  event.respondWith(fetch(event.request));
+});
+
 self.addEventListener("push", (event) => {
   let data = {};
   try {
