@@ -41,35 +41,13 @@ body {
 
 /* Start-Intro (einmal pro Sitzung): Auge öffnet sich */
 
-/* Lid fährt aus einem waagerechten Strich zur Mandelform auseinander */
+/* Logo fährt aus einem waagerechten Strich zur vollen Höhe auseinander */
 @keyframes eye-open {
   0% {
     transform: scaleY(0.04);
   }
   100% {
     transform: scaleY(1);
-  }
-}
-
-/* Iris + Mondsichel blenden ein, während das Lid sich öffnet */
-@keyframes eye-inner-in {
-  0% {
-    opacity: 0;
-  }
-  100% {
-    opacity: 1;
-  }
-}
-
-/* Wimpern ploppen zuletzt auf */
-@keyframes eye-lashes-in {
-  0% {
-    opacity: 0;
-    transform: scale(0.9);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1);
   }
 }
 
@@ -97,20 +75,9 @@ body {
   }
 }
 
-.eye-open-group {
-  transform-box: fill-box;
+.intro-eye {
   transform-origin: center;
   animation: eye-open 0.85s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-.eye-inner {
-  animation: eye-inner-in 0.5s ease-out 0.4s both;
-}
-
-.eye-lashes {
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: eye-lashes-in 0.5s ease-out 0.6s both;
 }
 
 .intro-word {
@@ -122,9 +89,7 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .eye-open-group,
-  .eye-inner,
-  .eye-lashes,
+  .intro-eye,
   .intro-word,
   .intro-line {
     animation-duration: 0.01ms;
