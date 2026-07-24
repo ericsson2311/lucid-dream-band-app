@@ -31,7 +31,7 @@ export default function IntroAnimation() {
   return (
     <div
       aria-hidden="true"
-      className={`fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black transition-opacity duration-500 ${
+      className={`fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black pb-[14vh] transition-opacity duration-500 ${
         phase === "leaving" ? "pointer-events-none opacity-0" : "opacity-100"
       }`}
     >
@@ -39,6 +39,7 @@ export default function IntroAnimation() {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/logo.svg" alt="" width={132} height={132} />
         <p className="mt-6 font-serif text-4xl">Lucid Dream</p>
+        <span className="mt-5 block h-px w-16 bg-white/50" />
       </div>
     </div>
   );
