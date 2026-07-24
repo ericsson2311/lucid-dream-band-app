@@ -1,5 +1,6 @@
 import { Geist, Playfair_Display } from "next/font/google";
 import "./globals.css";
+import IntroAnimation from "@/components/IntroAnimation";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -23,6 +24,7 @@ export default function RootLayout({ children }) {
       className={`${geistSans.variable} ${playfair.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-black text-white font-sans">
+        <IntroAnimation />
         {children}
       </body>
     </html>
