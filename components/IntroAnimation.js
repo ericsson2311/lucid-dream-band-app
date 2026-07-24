@@ -8,8 +8,8 @@ const SESSION_KEY = "introShown";
 // liegt in sessionStorage, überlebt also ein Neuladen im selben Tab, wird aber
 // beim vollständigen Schließen der App/des Tabs zurückgesetzt.
 //
-// Das Auge ist das echte Vektor-Logo (public/logo.svg); es öffnet sich aus einem
-// waagerechten Strich heraus (scaleY), danach erscheinen Schriftzug und Linie.
+// Das Auge ist das echte Vektor-Logo (public/logo.svg); Logo und Name blenden
+// gemeinsam ein und nach kurzem Halten wieder aus.
 export default function IntroAnimation() {
   // "hidden" (Startwert, verhindert Hydration-Mismatch) | "visible" | "leaving" | "done"
   const [phase, setPhase] = useState("hidden");
@@ -18,8 +18,8 @@ export default function IntroAnimation() {
     if (sessionStorage.getItem(SESSION_KEY)) return;
     sessionStorage.setItem(SESSION_KEY, "1");
     setPhase("visible");
-    const leaveTimer = setTimeout(() => setPhase("leaving"), 2400);
-    const doneTimer = setTimeout(() => setPhase("done"), 2950);
+    const leaveTimer = setTimeout(() => setPhase("leaving"), 3300);
+    const doneTimer = setTimeout(() => setPhase("done"), 3850);
     return () => {
       clearTimeout(leaveTimer);
       clearTimeout(doneTimer);
@@ -35,10 +35,11 @@ export default function IntroAnimation() {
         phase === "leaving" ? "pointer-events-none opacity-0" : "opacity-100"
       }`}
     >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/logo.svg" alt="" width={132} height={132} className="intro-eye" />
-      <p className="intro-word mt-6 font-serif text-4xl">Lucid Dream</p>
-      <span className="intro-line mt-4 block h-px bg-white" />
+      <div className="intro-in flex flex-col items-center">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/logo.svg" alt="" width={132} height={132} />
+        <p className="mt-6 font-serif text-4xl">Lucid Dream</p>
+      </div>
     </div>
   );
 }
