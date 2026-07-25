@@ -26,13 +26,6 @@ export default function SongList({ table, heading, refreshSignal }) {
     setLoading(false);
   }
 
-  async function handleDelete(id) {
-    if (!window.confirm("Diesen Song wirklich löschen?")) return;
-    const { error } = await supabase.from(table).delete().eq("id", id);
-    if (error) setError(error.message);
-    else loadSongs();
-  }
-
   return (
     <section>
       <h2 className="mb-6 font-serif text-3xl">{heading}</h2>
@@ -46,23 +39,19 @@ export default function SongList({ table, heading, refreshSignal }) {
       ) : (
         <ul className="divide-y divide-white/10 border-t border-white/10">
           {songs.map((song) => (
-            <li key={song.id} className="flex items-start justify-between gap-4 py-3">
+            <li key={song.id}>
               <button
                 onClick={() => setSelectedSong(song)}
-                className="min-w-0 flex-1 break-words text-left transition-colors hover:text-white/70"
+                className="flex w-full items-start justify-between gap-4 py-3 text-left transition-colors hover:text-white/70"
               >
-                {song.title}
-                {song.artist && <span className="ml-2 text-white/40">{song.artist}</span>}
+                <span className="min-w-0 flex-1 break-words">
+                  {song.title}
+                  {song.artist && <span className="ml-2 text-white/40">{song.artist}</span>}
+                </span>
+                <span className="shrink-0 text-white/60">
+                  {formatDuration(song.length_seconds)}
+                </span>
               </button>
-              <div className="flex shrink-0 items-center gap-4">
-                <span className="text-white/60">{formatDuration(song.length_seconds)}</span>
-                <button
-                  onClick={() => handleDelete(song.id)}
-                  className="text-sm text-white/40 transition-colors hover:text-red-400"
-                >
-                  Löschen
-                </button>
-              </div>
             </li>
           ))}
         </ul>
@@ -74,6 +63,7 @@ export default function SongList({ table, heading, refreshSignal }) {
           table={table}
           onClose={() => setSelectedSong(null)}
           onSaved={loadSongs}
+          onDeleted={loadSongs}
         />
       )}
     </section>

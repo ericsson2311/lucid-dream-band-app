@@ -4,12 +4,14 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { formatDuration, parseDuration } from "@/lib/format";
 import { sanitizeFileName } from "@/lib/sanitizeFileName";
+import Modal from "@/components/Modal";
+import DeleteButton from "@/components/DeleteButton";
 
 function stripFilePrefix(name) {
   return name.replace(/^\d+-/, "");
 }
 
-export default function SongDetailModal({ song, table, onClose, onSaved }) {
+export default function SongDetailModal({ song, table, onClose, onSaved, onDeleted }) {
   const [length, setLength] = useState(
     song.length_seconds != null ? formatDuration(song.length_seconds) : ""
   );
@@ -99,136 +101,129 @@ export default function SongDetailModal({ song, table, onClose, onSaved }) {
   }
 
   async function handleDeleteFile(name) {
-    if (!window.confirm("Diese Datei wirklich löschen?")) return;
     const { error } = await supabase.storage.from("song-files").remove([`${folder}/${name}`]);
     if (error) setError(error.message);
     else loadFiles();
   }
 
+  async function handleDeleteSong() {
+    setError("");
+    const { error } = await supabase.from(table).delete().eq("id", song.id);
+    if (error) {
+      setError(error.message);
+      return;
+    }
+    onDeleted?.();
+    onClose();
+  }
+
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/80 px-4 py-10"
-      onClick={onClose}
-    >
-      <div
-        className="w-full max-w-xl border border-white/20 bg-black p-6 sm:p-8"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="mb-8 flex items-start justify-between gap-4">
-          <h2 className="min-w-0 break-words font-serif text-3xl leading-tight sm:text-4xl">
-            {song.title}
-          </h2>
-          <button
-            onClick={onClose}
-            className="shrink-0 text-sm text-white/60 transition-colors hover:text-white"
-          >
-            Schließen
-          </button>
+    <Modal title={song.title} onClose={onClose}>
+      {error && <p className="mb-4 text-sm text-red-400">{error}</p>}
+
+      <form onSubmit={handleSaveDetails} className="mb-10 flex flex-col gap-4">
+        <div className="flex flex-col gap-1">
+          <label className="text-sm text-white/60">Länge (mm:ss)</label>
+          <input
+            value={length}
+            onChange={(e) => {
+              setLength(e.target.value);
+              setSaved(false);
+            }}
+            placeholder="3:45"
+            className="w-32 border border-white/20 bg-transparent px-3 py-2 outline-none focus:border-white"
+          />
         </div>
 
-        {error && <p className="mb-4 text-sm text-red-400">{error}</p>}
-
-        <form onSubmit={handleSaveDetails} className="mb-10 flex flex-col gap-4">
+        <div className="grid grid-cols-2 gap-3">
           <div className="flex flex-col gap-1">
-            <label className="text-sm text-white/60">Länge (mm:ss)</label>
+            <label className="text-sm text-white/60">BPM</label>
             <input
-              value={length}
+              type="number"
+              min="0"
+              value={bpm}
               onChange={(e) => {
-                setLength(e.target.value);
-                setSaved(false);
-              }}
-              placeholder="3:45"
-              className="w-32 border border-white/20 bg-transparent px-3 py-2 outline-none focus:border-white"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div className="flex flex-col gap-1">
-              <label className="text-sm text-white/60">BPM</label>
-              <input
-                type="number"
-                min="0"
-                value={bpm}
-                onChange={(e) => {
-                  setBpm(e.target.value);
-                  setSaved(false);
-                }}
-                className="border border-white/20 bg-transparent px-3 py-2 outline-none focus:border-white"
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-sm text-white/60">Tonart</label>
-              <input
-                value={songKey}
-                onChange={(e) => {
-                  setSongKey(e.target.value);
-                  setSaved(false);
-                }}
-                placeholder="z.B. Am, C#, Dm"
-                className="border border-white/20 bg-transparent px-3 py-2 outline-none focus:border-white"
-              />
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <label className="text-sm text-white/60">Notizen</label>
-            <textarea
-              rows={4}
-              value={notes}
-              onChange={(e) => {
-                setNotes(e.target.value);
+                setBpm(e.target.value);
                 setSaved(false);
               }}
               className="border border-white/20 bg-transparent px-3 py-2 outline-none focus:border-white"
             />
           </div>
-
-          <button
-            type="submit"
-            disabled={saving}
-            className="self-start border border-white px-4 py-2 transition-colors hover:bg-white hover:text-black disabled:opacity-50"
-          >
-            {saving ? "Speichert…" : saved ? "Gespeichert" : "Speichern"}
-          </button>
-        </form>
-
-        <div>
-          <h3 className="mb-3 text-sm uppercase tracking-wide text-white/60">Dateien</h3>
-
-          <label className="mb-4 inline-block cursor-pointer border border-white/20 px-4 py-2 text-sm transition-colors hover:border-white">
-            {uploading ? "Lädt hoch…" : "Datei hochladen"}
-            <input type="file" onChange={handleUpload} disabled={uploading} className="hidden" />
-          </label>
-
-          {filesLoading ? (
-            <p className="text-white/60">Lade…</p>
-          ) : files.length === 0 ? (
-            <p className="text-white/60">Noch keine Dateien.</p>
-          ) : (
-            <ul className="divide-y divide-white/10 border-t border-white/10">
-              {files.map((file) => (
-                <li key={file.name} className="flex items-center justify-between py-2">
-                  <span className="truncate text-sm">{stripFilePrefix(file.name)}</span>
-                  <div className="flex shrink-0 items-center gap-4">
-                    <button
-                      onClick={() => handleDownload(file.name)}
-                      className="text-sm text-white/60 transition-colors hover:text-white"
-                    >
-                      Herunterladen
-                    </button>
-                    <button
-                      onClick={() => handleDeleteFile(file.name)}
-                      className="text-sm text-white/40 transition-colors hover:text-red-400"
-                    >
-                      Löschen
-                    </button>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
+          <div className="flex flex-col gap-1">
+            <label className="text-sm text-white/60">Tonart</label>
+            <input
+              value={songKey}
+              onChange={(e) => {
+                setSongKey(e.target.value);
+                setSaved(false);
+              }}
+              placeholder="z.B. Am, C#, Dm"
+              className="border border-white/20 bg-transparent px-3 py-2 outline-none focus:border-white"
+            />
+          </div>
         </div>
+
+        <div className="flex flex-col gap-1">
+          <label className="text-sm text-white/60">Notizen</label>
+          <textarea
+            rows={4}
+            value={notes}
+            onChange={(e) => {
+              setNotes(e.target.value);
+              setSaved(false);
+            }}
+            className="border border-white/20 bg-transparent px-3 py-2 outline-none focus:border-white"
+          />
+        </div>
+
+        <button
+          type="submit"
+          disabled={saving}
+          className="self-start border border-white px-4 py-2 transition-colors hover:bg-white hover:text-black disabled:opacity-50"
+        >
+          {saving ? "Speichert…" : saved ? "Gespeichert" : "Speichern"}
+        </button>
+      </form>
+
+      <div>
+        <h3 className="mb-3 text-sm uppercase tracking-wide text-white/60">Dateien</h3>
+
+        <label className="mb-4 inline-block cursor-pointer border border-white/20 px-4 py-2 text-sm transition-colors hover:border-white">
+          {uploading ? "Lädt hoch…" : "Datei hochladen"}
+          <input type="file" onChange={handleUpload} disabled={uploading} className="hidden" />
+        </label>
+
+        {filesLoading ? (
+          <p className="text-white/60">Lade…</p>
+        ) : files.length === 0 ? (
+          <p className="text-white/60">Noch keine Dateien.</p>
+        ) : (
+          <ul className="divide-y divide-white/10 border-t border-white/10">
+            {files.map((file) => (
+              <li key={file.name} className="flex items-center justify-between py-2">
+                <span className="truncate text-sm">{stripFilePrefix(file.name)}</span>
+                <div className="flex shrink-0 items-center gap-4">
+                  <button
+                    onClick={() => handleDownload(file.name)}
+                    className="text-sm text-white/60 transition-colors hover:text-white"
+                  >
+                    Herunterladen
+                  </button>
+                  <DeleteButton onDelete={() => handleDeleteFile(file.name)} />
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
-    </div>
+
+      <div className="mt-10 flex justify-end border-t border-white/10 pt-5">
+        <DeleteButton
+          label="Song löschen"
+          confirmLabel="Song wirklich löschen?"
+          onDelete={handleDeleteSong}
+        />
+      </div>
+    </Modal>
   );
 }

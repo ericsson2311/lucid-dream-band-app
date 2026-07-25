@@ -3,11 +3,13 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { formatDuration } from "@/lib/format";
+import DeleteButton from "@/components/DeleteButton";
 
 export default function SetlistBuilder() {
   const [pool, setPool] = useState([]);
   const [selected, setSelected] = useState([]);
   const [name, setName] = useState("");
+  const [editingId, setEditingId] = useState(null);
   const [saved, setSaved] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -45,6 +47,33 @@ export default function SetlistBuilder() {
     setSelected((prev) => prev.filter((_, i) => i !== index));
   }
 
+  // Reihenfolge ist bei einer Setlist der Kern – Songs lassen sich verschieben.
+  function moveSelected(index, direction) {
+    const target = index + direction;
+    setSelected((prev) => {
+      if (target < 0 || target >= prev.length) return prev;
+      const next = [...prev];
+      [next[index], next[target]] = [next[target], next[index]];
+      return next;
+    });
+  }
+
+  function startEditing(setlist) {
+    setEditingId(setlist.id);
+    setName(setlist.name);
+    setSelected(setlist.items);
+    setError("");
+    setExpandedId(null);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function cancelEditing() {
+    setEditingId(null);
+    setName("");
+    setSelected([]);
+    setError("");
+  }
+
   const totalSeconds = selected.reduce((sum, s) => sum + (s.length_seconds || 0), 0);
 
   async function handleSave(e) {
@@ -54,7 +83,7 @@ export default function SetlistBuilder() {
       setError("Bitte einen Namen und mindestens einen Song wählen.");
       return;
     }
-    const { error } = await supabase.from("setlists").insert({
+    const payload = {
       name: name.trim(),
       items: selected.map(({ id, title, length_seconds, source }) => ({
         id,
@@ -62,21 +91,26 @@ export default function SetlistBuilder() {
         length_seconds,
         source,
       })),
-    });
+    };
+    const { error } = editingId
+      ? await supabase.from("setlists").update(payload).eq("id", editingId)
+      : await supabase.from("setlists").insert(payload);
     if (error) {
       setError(error.message);
       return;
     }
-    setName("");
-    setSelected([]);
+    cancelEditing();
     loadAll();
   }
 
   async function handleDeleteSetlist(id) {
-    if (!window.confirm("Diese Setlist wirklich löschen?")) return;
     const { error } = await supabase.from("setlists").delete().eq("id", id);
-    if (error) setError(error.message);
-    else loadAll();
+    if (error) {
+      setError(error.message);
+      return;
+    }
+    if (editingId === id) cancelEditing();
+    loadAll();
   }
 
   if (loading) return <p className="text-white/60">Lade…</p>;
@@ -95,12 +129,12 @@ export default function SetlistBuilder() {
             {songs.map((song) => (
               <li
                 key={`${song.source}-${song.id}`}
-                className="flex items-center justify-between py-2"
+                className="flex items-center justify-between gap-3 py-2"
               >
-                <span className="text-sm">{song.title}</span>
+                <span className="min-w-0 break-words text-sm">{song.title}</span>
                 <button
                   onClick={() => addToSelected(song)}
-                  className="text-sm text-white/60 transition-colors hover:text-white"
+                  className="shrink-0 px-2 py-1 text-sm text-white/60 transition-colors hover:text-white"
                 >
                   + Hinzufügen
                 </button>
@@ -119,40 +153,58 @@ export default function SetlistBuilder() {
 
       <div className="grid gap-8 sm:grid-cols-2">
         <div>
-          <h3 className="mb-3 text-sm uppercase tracking-wide text-white/60">
-            Songs auswählen
-          </h3>
+          <h3 className="mb-3 text-sm uppercase tracking-wide text-white/60">Songs auswählen</h3>
           {renderPoolGroup("Coversongs", covers)}
           {renderPoolGroup("Eigene Songs", originals)}
         </div>
 
         <div>
           <h3 className="mb-3 text-sm uppercase tracking-wide text-white/60">
-            Aktuelle Setlist
+            {editingId ? "Setlist bearbeiten" : "Aktuelle Setlist"}
           </h3>
           {selected.length === 0 ? (
             <p className="text-white/60">Noch keine Songs gewählt.</p>
           ) : (
             <ul className="divide-y divide-white/10 border-t border-white/10">
               {selected.map((song, i) => (
-                <li key={i} className="flex items-center justify-between py-2">
-                  <span className="text-sm">{song.title}</span>
-                  <div className="flex items-center gap-3">
-                    <span className="text-white/60">{formatDuration(song.length_seconds)}</span>
+                <li key={i} className="flex items-center justify-between gap-2 py-2">
+                  <span className="min-w-0 flex-1 break-words text-sm">
+                    <span className="mr-2 text-white/40">{i + 1}.</span>
+                    {song.title}
+                  </span>
+                  <div className="flex shrink-0 items-center gap-1">
+                    <button
+                      onClick={() => moveSelected(i, -1)}
+                      disabled={i === 0}
+                      aria-label="Nach oben"
+                      className="px-2 py-1 text-white/60 transition-colors hover:text-white disabled:opacity-25"
+                    >
+                      ↑
+                    </button>
+                    <button
+                      onClick={() => moveSelected(i, 1)}
+                      disabled={i === selected.length - 1}
+                      aria-label="Nach unten"
+                      className="px-2 py-1 text-white/60 transition-colors hover:text-white disabled:opacity-25"
+                    >
+                      ↓
+                    </button>
+                    <span className="ml-2 text-sm text-white/60">
+                      {formatDuration(song.length_seconds)}
+                    </span>
                     <button
                       onClick={() => removeSelected(i)}
-                      className="text-sm text-white/40 transition-colors hover:text-red-400"
+                      aria-label="Entfernen"
+                      className="ml-1 px-2 py-1 text-sm text-white/40 transition-colors hover:text-red-400"
                     >
-                      Entfernen
+                      ✕
                     </button>
                   </div>
                 </li>
               ))}
             </ul>
           )}
-          <p className="mt-4 text-sm text-white/80">
-            Gesamtdauer: {formatDuration(totalSeconds)}
-          </p>
+          <p className="mt-4 text-sm text-white/80">Gesamtdauer: {formatDuration(totalSeconds)}</p>
 
           <form onSubmit={handleSave} className="mt-4 flex flex-col gap-3 sm:flex-row">
             <input
@@ -165,9 +217,17 @@ export default function SetlistBuilder() {
               type="submit"
               className="border border-white px-4 py-2 transition-colors hover:bg-white hover:text-black"
             >
-              Setlist speichern
+              {editingId ? "Änderungen speichern" : "Setlist speichern"}
             </button>
           </form>
+          {editingId && (
+            <button
+              onClick={cancelEditing}
+              className="mt-3 text-sm text-white/60 transition-colors hover:text-white"
+            >
+              Bearbeiten abbrechen
+            </button>
+          )}
         </div>
       </div>
 
@@ -183,10 +243,10 @@ export default function SetlistBuilder() {
             const isOpen = expandedId === setlist.id;
             return (
               <li key={setlist.id} className="py-3">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-3">
                   <button
                     onClick={() => setExpandedId(isOpen ? null : setlist.id)}
-                    className="text-left transition-colors hover:text-white/80"
+                    className="min-w-0 flex-1 py-1 text-left transition-colors hover:text-white/80"
                   >
                     {setlist.name}{" "}
                     <span className="text-white/40">
@@ -194,20 +254,29 @@ export default function SetlistBuilder() {
                     </span>
                   </button>
                   <button
-                    onClick={() => handleDeleteSetlist(setlist.id)}
-                    className="text-sm text-white/40 transition-colors hover:text-red-400"
+                    onClick={() => startEditing(setlist)}
+                    className="shrink-0 px-2 py-1 text-sm text-white/60 transition-colors hover:text-white"
                   >
-                    Löschen
+                    Bearbeiten
                   </button>
                 </div>
                 {isOpen && (
-                  <ol className="ml-4 mt-2 list-decimal text-sm text-white/70">
-                    {setlist.items.map((item, i) => (
-                      <li key={i}>
-                        {item.title} ({formatDuration(item.length_seconds)})
-                      </li>
-                    ))}
-                  </ol>
+                  <>
+                    <ol className="ml-4 mt-2 list-decimal text-sm text-white/70">
+                      {setlist.items.map((item, i) => (
+                        <li key={i}>
+                          {item.title} ({formatDuration(item.length_seconds)})
+                        </li>
+                      ))}
+                    </ol>
+                    <div className="mt-3 flex justify-end">
+                      <DeleteButton
+                        label="Setlist löschen"
+                        confirmLabel="Setlist wirklich löschen?"
+                        onDelete={() => handleDeleteSetlist(setlist.id)}
+                      />
+                    </div>
+                  </>
                 )}
               </li>
             );
