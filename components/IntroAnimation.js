@@ -31,7 +31,7 @@ export default function IntroAnimation() {
   return (
     <div
       aria-hidden="true"
-      className={`fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black pb-[14vh] transition-opacity duration-500 ${
+      className={`fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black pb-[7vh] transition-opacity duration-500 ${
         phase === "leaving" ? "pointer-events-none opacity-0" : "opacity-100"
       }`}
     >
