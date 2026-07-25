@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { supabase } from "@/lib/supabase";
-import { formatDate, todayIso } from "@/lib/format";
+import { formatDateWithWeekday, relativeDay, todayIso } from "@/lib/format";
 import NextRehearsalCard from "@/components/NextRehearsalCard";
 
 function formatFullDate(date) {
@@ -58,10 +58,11 @@ export default function HomeSection({ userId }) {
             <>
               <p className="text-white/80">{nextDate.title}</p>
               <p className="mt-1 text-sm text-white/50">
-                {formatDate(nextDate.event_date)}
+                {formatDateWithWeekday(nextDate.event_date)}
                 {nextDate.event_time ? `, ${nextDate.event_time} Uhr` : ""}
                 {nextDate.location ? ` — ${nextDate.location}` : ""}
               </p>
+              <p className="mt-1 text-sm text-white/70">{relativeDay(nextDate.event_date)}</p>
             </>
           ) : (
             <p className="text-white/60">Keine anstehenden Termine.</p>

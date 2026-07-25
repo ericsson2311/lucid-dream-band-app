@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { formatDate } from "@/lib/format";
+import { formatDateWithWeekday, relativeDay } from "@/lib/format";
 import RehearsalAttendance from "@/components/RehearsalAttendance";
 
 const REHEARSAL_ID = "00000000-0000-0000-0000-000000000001";
@@ -178,9 +178,10 @@ export default function NextRehearsalCard({ userId }) {
       ) : rehearsal?.rehearsal_date ? (
         <>
           <p className="text-white/80">
-            {formatDate(rehearsal.rehearsal_date)}
+            {formatDateWithWeekday(rehearsal.rehearsal_date)}
             {rehearsal.rehearsal_time ? `, ${rehearsal.rehearsal_time} Uhr` : ""}
           </p>
+          <p className="mt-1 text-sm text-white/70">{relativeDay(rehearsal.rehearsal_date)}</p>
           {rehearsal.songs?.length > 0 ? (
             <ul className="mt-3 list-disc pl-5 text-sm text-white/70">
               {rehearsal.songs.map((s) => (

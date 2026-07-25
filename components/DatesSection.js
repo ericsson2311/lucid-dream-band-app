@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { formatDate, todayIso } from "@/lib/format";
+import { formatDateWithWeekday, relativeDay, todayIso } from "@/lib/format";
 import DateDetailModal from "@/components/DateDetailModal";
 import DateFormModal from "@/components/DateFormModal";
 
@@ -39,9 +39,11 @@ export default function DatesSection() {
         >
           <span className="block">{d.title}</span>
           <span className={`block text-sm ${faded ? "text-white/30" : "text-white/50"}`}>
-            {formatDate(d.event_date)}
+            {formatDateWithWeekday(d.event_date)}
             {d.event_time ? `, ${d.event_time} Uhr` : ""}
             {d.location ? ` — ${d.location}` : ""}
+            {" · "}
+            {relativeDay(d.event_date)}
           </span>
         </button>
       </li>
