@@ -4,12 +4,12 @@ import { useEffect, useState } from "react";
 
 const SESSION_KEY = "introShown";
 
-// Kurze Start-Animation, die einmal pro Browser-Sitzung erscheint. Der Merker
-// liegt in sessionStorage, überlebt also ein Neuladen im selben Tab, wird aber
-// beim vollständigen Schließen der App/des Tabs zurückgesetzt.
+// Startbildschirm, der einmal pro Browser-Sitzung erscheint. Der Merker liegt
+// in sessionStorage, überlebt also ein Neuladen im selben Tab, wird aber beim
+// vollständigen Schließen der App/des Tabs zurückgesetzt.
 //
-// Das Auge ist das echte Vektor-Logo (public/logo.svg); Logo und Name blenden
-// gemeinsam ein und nach kurzem Halten wieder aus.
+// Das Auge (echtes Vektor-Logo, public/logo.svg) bleibt stehen und pulsiert
+// leicht als Einladung zum Antippen; ein Tap darauf öffnet die App darunter.
 export default function IntroAnimation() {
   // "hidden" (Startwert, verhindert Hydration-Mismatch) | "visible" | "leaving" | "done"
   const [phase, setPhase] = useState("hidden");
@@ -18,28 +18,41 @@ export default function IntroAnimation() {
     if (sessionStorage.getItem(SESSION_KEY)) return;
     sessionStorage.setItem(SESSION_KEY, "1");
     setPhase("visible");
-    const leaveTimer = setTimeout(() => setPhase("leaving"), 3300);
-    const doneTimer = setTimeout(() => setPhase("done"), 3850);
-    return () => {
-      clearTimeout(leaveTimer);
-      clearTimeout(doneTimer);
-    };
   }, []);
+
+  function handleOpen() {
+    setPhase("leaving");
+    // Fallback, falls transitionend nicht feuert (z.B. wenn der Tab beim
+    // Antippen sofort in den Hintergrund wechselt) – räumt trotzdem auf.
+    setTimeout(() => setPhase("done"), 600);
+  }
+
+  function handleTransitionEnd(e) {
+    if (e.target === e.currentTarget && phase === "leaving") setPhase("done");
+  }
 
   if (phase === "hidden" || phase === "done") return null;
 
   return (
     <div
-      aria-hidden="true"
       className={`fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black pb-[7vh] transition-opacity duration-500 ${
         phase === "leaving" ? "pointer-events-none opacity-0" : "opacity-100"
       }`}
+      onTransitionEnd={handleTransitionEnd}
     >
       <div className="intro-in flex flex-col items-center">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/logo.svg" alt="" width={132} height={132} />
-        <p className="mt-6 font-serif text-4xl">Lucid Dream</p>
-        <span className="mt-5 block h-px w-16 bg-white/50" />
+        <button
+          type="button"
+          onClick={handleOpen}
+          aria-label="App öffnen"
+          className="intro-pulse -m-4 rounded-full p-4"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.svg" alt="" width={132} height={132} />
+        </button>
+        <p className="intro-hint mt-6 text-sm uppercase tracking-widest text-white/40">
+          Antippen zum Öffnen
+        </p>
       </div>
     </div>
   );
