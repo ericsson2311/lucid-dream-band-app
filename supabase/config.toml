@@ -12,3 +12,9 @@ verify_jwt = false
 
 [functions.rehearsal-reminder]
 verify_jwt = false
+
+[functions.notify-new-rehearsal]
+verify_jwt = false
+
+[functions.notify-rehearsal-attendance]
+verify_jwt = false

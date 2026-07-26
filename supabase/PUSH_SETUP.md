@@ -20,9 +20,9 @@ Webhook-Secret) und unten überall dort einsetzen, wo `<VAPID_PRIVATE_KEY>` bzw.
 `<FUNCTIONS_SECRET>` steht — inklusive in den beiden Database-Webhook-Headern und der
 Cron-Job-SQL (Schritt 3 und 4 müssten dann erneut ausgeführt werden).
 
-## 1. Datenbank-Migration ausführen
+## 1. Datenbank-Migrationen ausführen
 
-Im Supabase-Dashboard → **SQL Editor** → Inhalt von `supabase/migrations/0003_push_notifications.sql` einfügen → **Run**.
+Im Supabase-Dashboard → **SQL Editor** → Inhalt von `supabase/migrations/0003_push_notifications.sql` einfügen → **Run**. Danach genauso mit `supabase/migrations/0004_rehearsal_notifications.sql`.
 
 ## 2. Edge Functions deployen
 
@@ -35,6 +35,8 @@ npx supabase link --project-ref hcwvkxdxxiigrxrpvzjo
 npx supabase functions deploy notify-new-date
 npx supabase functions deploy notify-new-note
 npx supabase functions deploy rehearsal-reminder
+npx supabase functions deploy notify-new-rehearsal
+npx supabase functions deploy notify-rehearsal-attendance
 
 npx supabase secrets set \
   VAPID_PUBLIC_KEY=BO3i9zxQLkqCHwbpDkzkVMMJML3xfI0rPQpP4XWCEepdsUM8a1zyxlkVZaOhgxrZJTLSSWe2MAxtWhCZ_YGHWyM \
@@ -48,9 +50,9 @@ npx supabase secrets set \
 Nach dem Deploy findest du die Function-URLs im Dashboard unter **Edge Functions**, Format:
 `https://hcwvkxdxxiigrxrpvzjo.supabase.co/functions/v1/<name>`
 
-## 3. Database Webhooks einrichten (Benachrichtigung bei neuem Termin/Notiz)
+## 3. Database Webhooks einrichten
 
-Im Dashboard → **Database** → **Webhooks** → **Create a new webhook**, zweimal:
+Im Dashboard → **Database** → **Webhooks** → **Create a new webhook**, viermal:
 
 **Webhook 1 — neue Termine**
 - Name: `notify-new-date`
@@ -66,6 +68,20 @@ Im Dashboard → **Database** → **Webhooks** → **Create a new webhook**, zwe
 - Table: `notes`
 - Events: nur `Insert`
 - URL: `https://hcwvkxdxxiigrxrpvzjo.supabase.co/functions/v1/notify-new-note`
+- Gleicher `x-webhook-secret`-Header wie oben
+
+**Webhook 3 — neue/geänderte Probe**
+- Name: `notify-new-rehearsal`
+- Table: `next_rehearsal`
+- Events: `Insert` **und** `Update` (beide ankreuzen)
+- URL: `https://hcwvkxdxxiigrxrpvzjo.supabase.co/functions/v1/notify-new-rehearsal`
+- Gleicher `x-webhook-secret`-Header wie oben
+
+**Webhook 4 — Anwesenheit zur Probe**
+- Name: `notify-rehearsal-attendance`
+- Table: `rehearsal_attendance`
+- Events: `Insert` **und** `Update` (beide ankreuzen)
+- URL: `https://hcwvkxdxxiigrxrpvzjo.supabase.co/functions/v1/notify-rehearsal-attendance`
 - Gleicher `x-webhook-secret`-Header wie oben
 
 ## 4. Täglicher Cron-Job für die Probe-Erinnerung
@@ -108,7 +124,9 @@ NEXT_PUBLIC_VAPID_PUBLIC_KEY = BO3i9zxQLkqCHwbpDkzkVMMJML3xfI0rPQpP4XWCEepdsUM8a
 
 1. Seite neu laden, oben rechts auf deinen Profil-Namen klicken → unten "Auf diesem Gerät aktivieren" klicken → Browser-Erlaubnis bestätigen.
 2. Von einem zweiten Account/Gerät aus einen Termin oder eine Notiz anlegen → Benachrichtigung sollte auf dem ersten Gerät erscheinen.
-3. Für die Probe-Erinnerung: `rehearsal_date` in `next_rehearsal` testweise auf "morgen" setzen und die Function manuell aufrufen:
+3. Auf der Startseite ein neues Probendatum eintragen (anderes Datum als vorher) → "Neue Probe"-Benachrichtigung sollte bei allen außer der speichernden Person ankommen. Nur die Songliste ändern, Datum gleich lassen → keine Benachrichtigung.
+4. Bei "Wer kommt?" Ja/Vielleicht/Nein anklicken (von einem zweiten Account) → "Anwesenheit zur Probe: Name: Antwort" sollte bei allen außer der antwortenden Person ankommen. Die eigene Antwort zurückziehen (nochmal draufklicken) löst bewusst keine Benachrichtigung aus.
+5. Für die Probe-Erinnerung: `rehearsal_date` in `next_rehearsal` testweise auf "morgen" setzen und die Function manuell aufrufen:
 
 ```bash
 curl -X POST https://hcwvkxdxxiigrxrpvzjo.supabase.co/functions/v1/rehearsal-reminder \
