@@ -28,7 +28,7 @@ export default function SongList({ table, heading, refreshSignal }) {
 
   return (
     <section>
-      <h2 className="mb-6 font-serif text-3xl">{heading}</h2>
+      <p className="mb-2 text-sm text-white/50">{heading}</p>
 
       {error && <p className="mb-4 text-sm text-red-400">{error}</p>}
 
