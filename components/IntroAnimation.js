@@ -9,7 +9,8 @@ const SESSION_KEY = "introShown";
 // vollständigen Schließen der App/des Tabs zurückgesetzt.
 //
 // Das Auge (echtes Vektor-Logo, public/logo.svg) bleibt stehen und pulsiert
-// leicht als Einladung zum Antippen; ein Tap darauf öffnet die App darunter.
+// leicht als Einladung zum Antippen; ein Tap irgendwo auf den Bildschirm
+// öffnet die App darunter.
 export default function IntroAnimation() {
   // "hidden" (Startwert, verhindert Hydration-Mismatch) | "visible" | "leaving" | "done"
   const [phase, setPhase] = useState("hidden");
@@ -35,25 +36,25 @@ export default function IntroAnimation() {
 
   return (
     <div
-      className={`fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black pb-[7vh] transition-opacity duration-500 ${
+      className={`fixed inset-0 z-[100] bg-black transition-opacity duration-500 ${
         phase === "leaving" ? "pointer-events-none opacity-0" : "opacity-100"
       }`}
       onTransitionEnd={handleTransitionEnd}
     >
-      <div className="intro-in flex flex-col items-center">
-        <button
-          type="button"
-          onClick={handleOpen}
-          aria-label="App öffnen"
-          className="intro-pulse -m-4 rounded-full p-4"
-        >
+      <button
+        type="button"
+        onClick={handleOpen}
+        aria-label="App öffnen"
+        className="intro-in flex h-full w-full flex-col items-center justify-center pb-[7vh]"
+      >
+        <span className="intro-pulse">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo.svg" alt="" width={132} height={132} />
-        </button>
+        </span>
         <p className="intro-hint mt-6 text-sm uppercase tracking-widest text-white/40">
           Antippen zum Öffnen
         </p>
-      </div>
+      </button>
     </div>
   );
 }
