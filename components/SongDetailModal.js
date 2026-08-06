@@ -12,6 +12,8 @@ function stripFilePrefix(name) {
 }
 
 export default function SongDetailModal({ song, table, onClose, onSaved, onDeleted }) {
+  const [title, setTitle] = useState(song.title ?? "");
+  const [artist, setArtist] = useState(song.artist ?? "");
   const [length, setLength] = useState(
     song.length_seconds != null ? formatDuration(song.length_seconds) : ""
   );
@@ -44,6 +46,11 @@ export default function SongDetailModal({ song, table, onClose, onSaved, onDelet
     e.preventDefault();
     setError("");
 
+    if (!title.trim()) {
+      setError("Bitte einen Titel angeben.");
+      return;
+    }
+
     let length_seconds = null;
     if (length.trim()) {
       length_seconds = parseDuration(length.trim());
@@ -58,6 +65,8 @@ export default function SongDetailModal({ song, table, onClose, onSaved, onDelet
     const { error } = await supabase
       .from(table)
       .update({
+        title: title.trim(),
+        artist: artist.trim() || null,
         length_seconds,
         bpm: bpm === "" ? null : Number(bpm),
         song_key: songKey.trim() || null,
@@ -118,10 +127,34 @@ export default function SongDetailModal({ song, table, onClose, onSaved, onDelet
   }
 
   return (
-    <Modal title={song.title} onClose={onClose}>
+    <Modal title={title || "Ohne Titel"} onClose={onClose}>
       {error && <p className="mb-4 text-sm text-red-400">{error}</p>}
 
       <form onSubmit={handleSaveDetails} className="mb-10 flex flex-col gap-4">
+        <div className="flex flex-col gap-1">
+          <label className="text-sm text-white/60">Titel</label>
+          <input
+            value={title}
+            onChange={(e) => {
+              setTitle(e.target.value);
+              setSaved(false);
+            }}
+            className="border border-white/20 bg-transparent px-3 py-2 outline-none focus:border-white"
+          />
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label className="text-sm text-white/60">Interpret (optional)</label>
+          <input
+            value={artist}
+            onChange={(e) => {
+              setArtist(e.target.value);
+              setSaved(false);
+            }}
+            className="border border-white/20 bg-transparent px-3 py-2 outline-none focus:border-white"
+          />
+        </div>
+
         <div className="flex flex-col gap-1">
           <label className="text-sm text-white/60">Länge (mm:ss)</label>
           <input
