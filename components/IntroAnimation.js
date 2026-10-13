@@ -15,8 +15,8 @@ export default function IntroAnimation() {
     if (sessionStorage.getItem(SESSION_KEY)) return;
     sessionStorage.setItem(SESSION_KEY, "1");
     setPhase("visible");
-    const leaveTimer = setTimeout(() => setPhase("leaving"), 2200);
-    const doneTimer = setTimeout(() => setPhase("done"), 2700);
+    const leaveTimer = setTimeout(() => setPhase("leaving"), 1200);
+    const doneTimer = setTimeout(() => setPhase("done"), 1700);
     return () => {
       clearTimeout(leaveTimer);
       clearTimeout(doneTimer);
@@ -32,12 +32,8 @@ export default function IntroAnimation() {
         phase === "leaving" ? "pointer-events-none opacity-0" : "opacity-100"
       }`}
     >
-      <div className="intro-in flex flex-col items-center">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/logo.svg" alt="" width={132} height={132} />
-        <p className="mt-6 font-serif text-4xl">Willkommen zurück!</p>
-        <span className="mt-5 block h-px w-16 bg-white/50" />
-      </div>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/logo.svg" alt="" width={132} height={132} className="intro-in" />
     </div>
   );
 }
